@@ -26,12 +26,14 @@ export const startServer = () => {
     });
   });
 
-  app.use("*", (req, res, next) => {
+  // універсальний обробник 404
+  app.use((req, res) => {
     res.status(404).json({
       message: "Not found",
     });
   });
 
+  // обробник помилок
   app.use((err, req, res, next) => {
     res.status(500).json({
       message: "Something went wrong",
