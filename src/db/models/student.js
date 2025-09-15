@@ -1,6 +1,5 @@
 // src/db/models/student.js
-
-import { Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 
 const studentsSchema = new Schema(
   {
@@ -32,3 +31,5 @@ const studentsSchema = new Schema(
     versionKey: false,
   }
 );
+
+export const StudentsCollection = model("students", studentsSchema);
