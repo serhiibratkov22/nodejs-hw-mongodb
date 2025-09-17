@@ -1,75 +1,69 @@
 // src/server.js
 
-import express from "express";
-import pino from "pino-http";
-import cors from "cors";
-import dotenv from "dotenv";
+import express from 'express';
+import cors from 'cors';
+import pino from 'pino-http';
+import { getAllContacts, getContactById } from './services/contacts.js';
+import initMongoConnection from './db/initMongoConnection.js';
 
-import { getAllStudents, getStudentById } from "./services/students.js";
-
-dotenv.config(); // завантажує .env
-
-const PORT = process.env.PORT || 3000;
-
-export const startServer = () => {
+const setupServer = async () => {
   const app = express();
 
-  app.use(express.json());
   app.use(cors());
+  app.use(pino());
 
-  app.use(
-    pino({
-      transport: {
-        target: "pino-pretty",
-      },
-    })
-  );
-
-  // Тестовий роут
-  app.get("/", (req, res) => {
-    res.json({ message: "Hello World!" });
-  });
-
-  // Отримати всіх студентів
-  app.get("/students", async (req, res, next) => {
+  app.get('/contacts', async (req, res) => {
     try {
-      const students = await getAllStudents();
-      res.status(200).json({ data: students });
-    } catch (err) {
-      next(err);
+      const contacts = await getAllContacts();
+
+      res.status(200).json({
+        status: 200,
+        message: 'Successfully found contacts!',
+        data: contacts,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: 500,
+        message: 'Server error',
+        data: null,
+      });
     }
   });
 
-  // Отримати студента по id
-  app.get("/students/:studentId", async (req, res, next) => {
-    try {
-      const { studentId } = req.params;
-      const student = await getStudentById(studentId);
+  app.get('/contacts/:contactId', async (req, res, next) => {
+    const { contactId } = req.params;
+    const contact = await getContactById(contactId);
 
-      if (!student) {
-        return res.status(404).json({ message: "Student not found" });
-      }
-
-      res.status(200).json({ data: student });
-    } catch (err) {
-      next(err);
+    if (!contact) {
+      res.status(404).json({
+        message: 'Contact not found',
+      });
+      return;
     }
-  });
 
-  // 404
-  app.use("*", (req, res) => {
-    res.status(404).json({ message: "Not found" });
-  });
-
-  // 500
-  app.use((err, req, res, next) => {
-    res.status(500).json({
-      message: "Something went wrong",
-      error: err.message,
+    res.status(200).json({
+      status: 200,
+      message: `Successfully found contact with id ${contactId}!`,
+      data: contact,
     });
   });
 
-  app.listen(PORT, () => {
-    console.log(`✅ Server is running on port ${PORT}`);
+  app.use((req, res) => {
+    res.status(404).json({ message: 'Not found' });
   });
+
+  const PORT = process.env.PORT || 3000;
+
+  try {
+    await initMongoConnection();
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Error connecting database', error);
+    process.exit(1);
+  }
 };
+
+export default setupServer;
