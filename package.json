@@ -9,9 +9,8 @@
     "pino-http": "^10.5.0"
   },
   "scripts": {
-  "dev": "nodemon src/index.js",
-  "start": "node src/index.js"
-},
+    "dev": "nodemon src/index.js"
+  },
   "keywords": [],
   "author": "SERHII_BRATKOV <sir3720@gmail.com>",
   "license": "ISC",
