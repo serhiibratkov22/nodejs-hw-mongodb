@@ -19,3 +19,38 @@ export const getContactById = async (contactId) => {
     return null;
   }
 };
+
+export const createContact = async (payload) => {
+  try {
+    const contact = await ContactsCollection.create(payload);
+    return contact;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+export const deleteContact = async (contactId) => {
+  try {
+    const contact = await ContactsCollection.findOneAndDelete({
+      _id: contactId,
+    });
+    return contact;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+export const updateContact = async (contactId, payload, options = {}) => {
+  const updContact = await ContactsCollection.findByIdAndUpdate(
+    contactId,
+    payload,
+    {
+      new: true,
+      ...options,
+    },
+  );
+
+  return updContact;
+};
