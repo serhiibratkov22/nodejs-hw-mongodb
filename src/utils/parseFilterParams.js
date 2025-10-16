@@ -1,3 +1,4 @@
+// src/utils/parseFilterParams.js
 export const parseFilterParams = (query) => {
   const { type, isFavourite } = query;
 

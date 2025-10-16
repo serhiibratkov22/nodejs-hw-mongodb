@@ -1,3 +1,4 @@
+// src/middlewares/validateBody.js
 import createHttpError from 'http-errors';
 
 export const validateBody = (schema) => async (req, res, next) => {
@@ -7,8 +8,14 @@ export const validateBody = (schema) => async (req, res, next) => {
     });
     next();
   } catch (err) {
+    const formattedErrors =
+      err.details?.map((detail) => ({
+        field: detail.path.join('.'),
+        message: detail.message,
+      })) || [];
+
     const error = createHttpError(400, 'Bad Request', {
-      errors: err.details,
+      errors: formattedErrors,
     });
     next(error);
   }
