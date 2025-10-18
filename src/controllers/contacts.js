@@ -12,6 +12,7 @@ import { parseFilterParams } from '../utils/parseFilterParams.js';
 import * as contactsService from '../services/contacts.js';
 import { SessionsCollection } from '../db/models/session.js';
 import { ContactsCollection } from '../db/models/contacts.js';
+import { uploadToCloudinary } from '../utils/cloudinary.js';
 
 export const getContactsController = async (req, res) => {
   const { page, perPage } = parsePaginationParams(req.query);
@@ -50,25 +51,29 @@ export const getContactByIdController = async (req, res) => {
 };
 
 export const createContactController = async (req, res) => {
-  const userId = req.user._id;
-  const { email } = req.body;
-
   try {
+    const userId = req.user?._id;
+    if (!userId) throw createHttpError(401, 'User not authenticated');
+
+    const { email } = req.body;
+
     if (email) {
       const existingContact = await ContactsCollection.findOne({
         email,
         userId,
       });
-      if (existingContact) {
-        throw createHttpError(409, 'Email in use');
-      }
+      if (existingContact) throw createHttpError(409, 'Email in use');
     }
 
-    const contact = await createContact(req.body, userId);
-
-    if (!contact) {
-      throw createHttpError(400, 'Failed to create contact');
+    let photoUrl = null;
+    if (req.file?.buffer) {
+      photoUrl = await uploadToCloudinary(req.file.buffer);
     }
+
+    const contact = await createContact(
+      { ...req.body, photo: photoUrl },
+      userId,
+    );
 
     res.status(201).json({
       status: 201,
@@ -76,10 +81,12 @@ export const createContactController = async (req, res) => {
       data: contact,
     });
   } catch (err) {
-    if (err.code === 11000) {
-      throw createHttpError(409, 'Email in use');
-    }
-    throw err;
+    if (err.code === 11000) throw createHttpError(409, 'Email in use');
+    res.status(err.status || 500).json({
+      status: err.status || 500,
+      message: err.message || 'Something went wrong',
+      data: {},
+    });
   }
 };
 
@@ -99,7 +106,17 @@ export const patchContactController = async (req, res) => {
   const { contactId } = req.params;
   const userId = req.user._id;
 
-  const contact = await updateContact(contactId, req.body, userId);
+  let photoUrl;
+  if (req.file) {
+    photoUrl = await uploadToCloudinary(req.file.buffer);
+  }
+
+  const contact = await updateContact(
+    contactId,
+    { ...req.body, ...(photoUrl && { photo: photoUrl }) },
+    userId,
+  );
+
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }
