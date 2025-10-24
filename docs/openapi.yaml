@@ -13,7 +13,7 @@ tags:
     description: API operations for user authentication and authorization, covering login, logout, and password reset.
 servers:
   - url: http://localhost:3000
-  # - url: https://your-api-domain.com
+  - url: https://nodejs-hw-mongodb-5-3gd3.onrender.com
 paths:
   /contacts:
     get:
