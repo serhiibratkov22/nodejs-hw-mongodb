@@ -1,0 +1,42 @@
+description: Successfully found contacts
+content:
+  application/json:
+    schema:
+      type: object
+      required:
+        - status
+        - message
+        - data
+      properties:
+        status:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Successfully found contacts!
+        data:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '../schemas/contact.yaml'
+            page:
+              type: integer
+              description: Page number for pagination
+              example: 1
+
+            perPage:
+              type: integer
+              description: Number of items per page
+              example: 1
+
+            totalItems:
+              type: integer
+              description: Total number of items
+              example: 1
+
+            totalPages:
+              type: integer
+              description: Total number of pages
+              example: 1
